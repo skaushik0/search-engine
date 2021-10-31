@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Search Engine</title>
+    <style>
+        * {
+            font-family: monospace !important;
+        }
+        input {
+            font-family: monospace;
+
+        }
+    </style>
+    <script type="text/javascript">
+        const loadBalancerIP = '__LOAD_BALANCER_IP__';
+        function handle(response) {
+            if (!response.ok) {
+                throw Error(response.json());
+            }
+            return response.json();
+        }
+
+        function clear() {
+            var result = document.querySelector('table[id=results]');
+            result.innerHTML = "<tr></tr><br/>";
+        }
+
+        function upload() {
+            clear();
+            var input = document.querySelector('input[id="upload-files"]')
+            var data = new FormData()
+            for (const file of input.files) {
+                data.append('file[]', file, file.name)
+            }
+
+            if (input.files.length > 0) {
+                fetch(`http://${loadBalancerIP}/upload`, {
+                    method: 'POST',
+                    body: data
+                })
+                .then(handle)
+                .then(data => {
+                    result = document.querySelector('table[id=results]');
+                    result.innerHTML = print(data, 'upload', false);
+                })
+                .catch(error => {
+                    result = document.querySelector('table[id=results]');
+                    result.innerHTML = print(error, 'upload', true);
+                });
+            }
+        }
+
+        function search() {
+            clear();
+            var term = document.querySelector('input[id="search-term"]').value;
+            var url = new URL(`http://${loadBalancerIP}/search?q=${term}`);
+            if (term.length > 0) {
+                fetch(url, {
+                    method: 'GET',
+                })
+                .then(handle)
+                .then(data => {
+                    result = document.querySelector('table[id=results]');
+                    result.innerHTML = print(data, 'search', false);
+                })
+                .catch(error => {
+                    result = document.querySelector('table[id=results]');
+                    result.innerHTML = print(error, 'search', true);
+                });
+            }
+        }
+
+        function topN() {
+            clear();
+            var n = parseInt(document.querySelector('input[id="top-n"]').value);
+            var url = new URL(`http://${loadBalancerIP}/top?n=${n}`);
+
+            if (n > 0) {
+                fetch(url, {
+                    method: 'GET',
+                })
+                .then(handle)
+                .then(data => {
+                    result = document.querySelector('table[id=results]');
+                    result.innerHTML = print(data, 'top', false);
+                })
+                .catch(error => {
+                    result = document.querySelector('table[id=results]');
+                    result.innerHTML = print(error, 'top', true);
+                });
+            }
+        }
+
+        function print(data, action, fail) {
+            if (action == 'top') {
+                out = '<tr><th align="right">TERM&nbsp;&nbsp;</th><th align="left">COUNT</th></tr>';
+                for (const row of data.results.top) {
+                    out += `<tr><td align="right">${row.term}&nbsp;&nbsp;</td><td align="left">${row.hits}</td></tr>`;
+                }
+            } else if (action == 'search') {
+                term = data.results.term;
+                hits = data.results.hits;
+                docs = data.results.docs.count;
+                out = '<tr><th align="left">TERM&nbsp;&nbsp;</th><th align="right">HITS&nbsp;&nbsp;</th><th align="right">FILES</th></tr>';
+                out += `<tr><td align="left"><strong>${term}</strong></td align="right"><td><strong>${hits}</strong></td><td align="right"><strong>${docs}</strong></tr>`;
+                for (const row of data.results.docs.match) {
+                    out += `<tr><td>&nbsp;&mdash;&nbsp;${row.path}&nbsp;&nbsp;</td><td>${row.hits}</td><td></td></tr>`;
+                }
+            } else if (action == 'upload') {
+                message = data.message;
+                if (!fail) {
+                    out = `<tr style="color: green;"><td>${message}</td><td></td><td></td>`;
+                } else {
+                    out = `<tr style="color: red;"><td>FAIL: ${message}</td><td></td><td></td>`;
+                }
+            }
+            out += "<br/>";
+            return out;
+        }
+    </script>
+</head>
+<body style="font-family: Monospace;">
+    <div style="width: 448px; margin: 0 auto; border: 1px solid black;">
+        <pre style="text-align: center;">--- SEARCH ENGINE ---</pre>
+        <table style="margin: 0px auto;">
+            <tr><td><pre>UPLOAD</pre></td><td></td><td></td></tr>
+            <tr>
+                <form id="upload-form" enctype="multipart/form-data">
+                    <td><input id="upload-files" type="file" accept="text/plain, application/gzip" value="Upload Files" multiple style="width: 256px;"></input></td>
+                    <td><input id="upload-button" type="button" value="Index" onclick="upload()" style="width: 64px"></input></td>
+                    <td></td>
+                </form>
+            </tr>
+            <tr><td><pre>SEARCH</pre></td><td></td><td></td></tr>
+            <tr>
+                <form id="search-form">
+                    <td><input id="search-term" type="text" required style="width: 256px;"></input></td>
+                    <td><input id="search-button" type="button" value="Search" onclick="search()" style="width: 64px"></input></td>
+                    <td></td>
+                </form>
+            </tr>
+            <tr>
+                <form id="top-form">
+                    <td><input id="top-n" type="number" min="1" required style="width: 256px;"></input></td>
+                    <td><input id="top-button" type="button" value="Top N" onclick="topN()" style="width: 64px"></input></td>
+                    <td></td>
+                </form>
+            </tr>
+        </table>
+        <br/>
+        <table id="results" style="margin: 0px auto;"></table>
+    </div>
+</body>
+</html>
