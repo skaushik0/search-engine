@@ -1,0 +1,69 @@
+search-engine
+-------------
+
+This repository contains the source and deployment scripts for
+14-848 final project (Option II).
+
+INTRODUCTION
+
+    The client and server run as separate containerized applications. The
+    client is an HTML page with embedded Javascript to make HTTP requests
+    to the server. The HTML page is served by "nginx" in the container.
+    It accepts user inputs for uploading files, searching those uploaded
+    documents for terms and the top "N" terms in in them. The server runs
+    on "Google Cloud Run" as a containerized service. It is a "python"
+    web-server. It uses the "whoosh" library to create inverted indices
+    for the uploaded documents. It provides an API to accept file uploads,
+    index them and run queries.
+
+    For details on connecting to GCP and deploying the service, please
+    refer to the "Makefile" in the repository root.
+
+DEPLOYMENT
+
+    As mentioned before, both the client and the server run on "docker"
+    containers. The server is deployed as a "Cloud Run" service and
+    accepts connections from the client. The client runs as a "docker"
+    image locally and communicates with the server. Deployment is done
+    via the "gcloud" binary.
+
+    The "docker" images are first built locally and pushed to GCR (Google
+    Container Registry). A service is created using the server's image
+    on Cloud Run. A "docker" container for the client is spun up locally
+    for the web UI.
+
+    To deploy the server, run:
+
+        $ make deploy
+
+    ... which will build and push the "docker" images and create the
+    service.
+
+    To run the client locally:
+
+        $ make client
+
+    ... which gets the server's hostname (via "gcloud") and passes that
+    as an environment variable to the client. The client can be accessed
+    from the browser, locally on http://localhost:8080 by default.
+
+    After testing, for deleting the service, docker containers and images,
+    run:
+
+        $ make clean
+
+STRUCTURE
+
+    - client/*
+        Contains source the client side application, Dockerfile and helper
+        scripts to apply necessary configurations
+
+    - server/*
+        Contains the server source, Dockerfile, and a configuration file
+        for the server runtime.
+
+    - data/*
+        Contains sample data sets for testing the application.
+
+    - Makefile
+        Helper script for build, deployment and teardown.
