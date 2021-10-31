@@ -1,0 +1,9 @@
+{
+    "index_dir": "/var/lib/search-index",
+    "upload_dir": "/tmp",
+    "ingest_types": [
+        "application/gzip",
+        "text/plain"
+    ],
+    "debug": false
+}
