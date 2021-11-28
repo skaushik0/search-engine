@@ -21,7 +21,7 @@ def load_conf(app_conf_path):
     with open(app_conf_path, 'r') as config:
         return json.loads(config.read())
 
-def get_mine_type(file, allowed, from_buf=False):
+def get_mime_type(file, allowed, from_buf=False):
     '''
     Verify if the uploaded file.
     '''
@@ -94,7 +94,7 @@ def index_files(file_path, file_mime_type, index):
 
             # Read the file contents.
             ex_data = ex_file.read()
-            ex_mime = get_mine_type(
+            ex_mime = get_mime_type(
                 ex_data, app_conf['ingest_types'], from_buf=True
             )
 
@@ -199,7 +199,7 @@ def upload():
         save_path = os.path.join(app_conf['upload_dir'], file_data.filename)
         file_data.save(save_path)
 
-        file_mime_type = get_mine_type(save_path, app_conf['ingest_types'])
+        file_mime_type = get_mime_type(save_path, app_conf['ingest_types'])
 
         if (file_mime_type is not None):
             index_ok = index_files(save_path, file_mime_type, index)

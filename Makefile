@@ -32,18 +32,19 @@ push:
 	docker push $(GCR_SERVER_DOCKER)
 
 deploy: build push
-	gcloud run deploy --region $(CLOUD_REGION) --image $(GCR_SERVER_DOCKER) \
-	                  --port $(CLOUD_SVC_PORT) $(CLOUD_SVC_NAME)            \
-					  --allow-unauthenticated
+	gcloud run deploy --region $(CLOUD_REGION)  \
+	--image $(GCR_SERVER_DOCKER)                \
+	--port $(CLOUD_SVC_PORT) $(CLOUD_SVC_NAME)  \
+	--allow-unauthenticated
 
 client:
 	$(eval SERVER := $(shell basename $(shell gcloud run services describe \
 	$(CLOUD_SVC_NAME) --platform managed --region $(CLOUD_REGION) --format \
 	'value(status.url)')))
-	docker run -d -p $(LOCAL_SVC_PORT):$(CLOUD_SVC_PORT)  \
-			   -e "SERVER=$(SERVER)" $(GCR_CLIENT_DOCKER) \
-			   --name $(LOCAL_SVC_NAME)
-	echo "Client: 'http://localhost:$(LOCAL_SVC_PORT)'."
+	docker run --name $(LOCAL_SVC_NAME)        \
+	-d -p $(LOCAL_SVC_PORT):$(CLOUD_SVC_PORT)  \
+	-e "SERVER=$(SERVER)" $(GCR_CLIENT_DOCKER)
+	@echo "Client: 'http://localhost:$(LOCAL_SVC_PORT)'."
 
 clean:
 	docker stop $(LOCAL_SVC_NAME)
@@ -54,4 +55,5 @@ clean:
 	gcloud container images delete $(GCR_SERVER_DOCKER) --force-delete-tags
 	gcloud run services delete $(CLOUD_SVC_NAME) --region $(CLOUD_REGION)
 
+all: auth build push deploy client
 .PHONY: auth build push deploy client clean
