@@ -55,5 +55,5 @@ clean:
 	gcloud container images delete $(GCR_SERVER_DOCKER) --force-delete-tags
 	gcloud run services delete $(CLOUD_SVC_NAME) --region $(CLOUD_REGION)
 
-all: auth build push deploy client
+all: auth deploy client
 .PHONY: auth build push deploy client clean

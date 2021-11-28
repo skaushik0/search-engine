@@ -67,3 +67,25 @@ STRUCTURE
 
     - Makefile
         Helper script for build, deployment and teardown.
+
+    - media/*
+        Contains recorded videos and screenshots of the demo.
+
+        - demo.mp4
+            Recording of the application deployment and demo.
+
+        - upload.png
+            Shows the files being uploaded to the server.
+
+        - top-n.png
+            Shows the top 10 search terms in the uploaded documents.
+
+        - search.png
+            Shows the search results for a given term.
+
+        - stop-words.png
+            Shows that stop words return no hits when searched.
+
+        - logs.png
+            Shows the application server logs for the search and upload
+            requests.
